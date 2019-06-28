@@ -7,8 +7,11 @@ const pkg = require('./package.json');
 
 const { port, dbUrl, secret } = config;
 const app = express();
+const db = require('./libs/connection');
 
-// TODO: Conección a la BD en mogodb
+// Conexión a la BD en mongodb
+db()
+.then((db) => {
 
 app.set('config', config);
 app.set('pkg', pkg);
@@ -20,13 +23,15 @@ app.use(authMiddleware(secret));
 
 // Registrar rutas
 routes(app, (err) => {
+	console.log('routes registered');
   if (err) {
     throw err;
   }
-
+});
   app.use(errorHandler);
 
   app.listen(port, () => {
     console.info(`App listening on port ${port}`);
   });
+
 });
