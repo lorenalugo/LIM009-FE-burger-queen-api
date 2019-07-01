@@ -19,11 +19,24 @@ module.exports = (app, nextMain) => {
    */
   app.post('/auth', (req, resp, next) => {
     const { email, password } = req.body;
+    const id = req.params.userId;
 
     if (!email || !password) {
       return next(400);
     }
 
+    const payload = {
+      email,
+      password: bcrypt.hashSync(password, 10),
+      roles: { admin: false },
+      //sub: id
+    };
+
+    return jwt.sign(payload, secret, (err, token) => {
+      if (err) return next(err);
+      resp.send({token});
+      return next(200);
+    });
 
   });
 

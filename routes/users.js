@@ -1,4 +1,13 @@
 const bcrypt = require('bcrypt');
+const db = require('../libs/connection');
+
+const {
+  getUsers,
+  getUserById,
+  createUser,
+  updateUserById,
+  deleteUserById
+} = require('../controller/users');
 
 const {
   requireAuth,
@@ -19,6 +28,12 @@ const initAdminUser = (app, next) => {
   };
 
   // TODO: crear usuarix admin
+
+  db().then((db) => {
+    db.collection('users').save({adminUser})
+    .then(next())
+  });
+
 };
 
 
@@ -66,8 +81,7 @@ module.exports = (app, next) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {403} si no es ni admin
    */
-  app.get('/users', requireAdmin, (req, resp) => {
-  });
+  app.get('/users', requireAdmin, getUsers);
 
   /**
    * @name GET /users/:uid
@@ -85,8 +99,7 @@ module.exports = (app, next) => {
    * @code {403} si no es ni admin o el mismo usuario
    * @code {404} si el usuario solicitado no existe
    */
-  app.get('/users/:uid', requireAuth, (req, resp) => {
-  });
+  app.get('/users/:uid', requireAuth, getUserById);
 
   /**
    * @name POST /users
@@ -105,8 +118,7 @@ module.exports = (app, next) => {
    * @code {401} si no hay cabecera de autenticación
    * @code {403} si ya existe usuario con ese `email`
    */
-  app.post('/users', requireAdmin, (req, resp, next) => {
-  });
+  app.post('/users', requireAdmin, createUser);
 
   /**
    * @name PUT /users
@@ -128,8 +140,7 @@ module.exports = (app, next) => {
    * @code {403} un usuario no admin intenta de modificar sus `roles`
    * @code {404} si el usuario solicitado no existe
    */
-  app.put('/users/:uid', requireAuth, (req, resp, next) => {
-  });
+  app.put('/users/:uid', requireAuth, updateUserById);
 
   /**
    * @name DELETE /users
@@ -147,8 +158,7 @@ module.exports = (app, next) => {
    * @code {403} si no es ni admin o el mismo usuario
    * @code {404} si el usuario solicitado no existe
    */
-  app.delete('/users/:uid', requireAuth, (req, resp, next) => {
-  });
+  app.delete('/users/:uid', requireAuth, deleteUserById);
 
   initAdminUser(app, next);
 };

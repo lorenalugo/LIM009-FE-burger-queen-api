@@ -31,7 +31,7 @@ module.exports = {
       return next(400);
     } else {
       db().then((db) => {
-        db.collection('products').insert(body)
+        db.collection('products').insert({name, price, image, type})
         .then((product) => {
       	  resp.send(product);
           next(200)
@@ -47,7 +47,7 @@ module.exports = {
       return next(400);
     } else {
       db().then((db) => {
-        db.collection('products').findOneAndUpdate({'_id': new ObjectId(id) }, body)
+        db.collection('products').findOneAndUpdate({'_id': new ObjectId(id) }, {name, price, image, type})
         .then((product) => {
       	  resp.send(product);
           next(200)
