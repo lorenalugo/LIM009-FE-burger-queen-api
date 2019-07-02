@@ -21,6 +21,7 @@ module.exports = (app, nextMain) => {
    * @auth Requiere `token` de autenticación
    * @response {Array} orders
    * @response {String} orders[].userId Id usuarix que creó la orden
+   * @response {String} orders[].client Clienta para quien se creó la orden
    * @response {Array} orders[].products Productos
    * @response {Object} orders[].products[] Producto
    * @response {Number} orders[].products[].qty Cantidad
@@ -41,6 +42,7 @@ module.exports = (app, nextMain) => {
    * @auth Requiere `token` de autenticación
    * @response {Object} order
    * @response {String} order.userId Id usuario que creó la orden
+   * @response {String} orders[].client Clienta para quien se creó la orden
    * @response {Array} order.products Productos
    * @response {Object} order.products[] Producto
    * @response {Number} order.products[].qty Cantidad
@@ -60,6 +62,7 @@ module.exports = (app, nextMain) => {
    * @path {POST} /orders
    * @auth Requiere `token` de autenticación
    * @body {String} userId Id usuario que creó la orden
+   * @response {String} orders[].client Clienta para quien se creó la orden
    * @body {Array} order.products Productos
    * @body {Object} order.products[] Producto
    * @body {String} order.products[].productId Id de un producto
@@ -86,12 +89,14 @@ module.exports = (app, nextMain) => {
    * @params {String} :orderId `id` de la orden
    * @auth Requiere `token` de autenticación
    * @body {String} userId Id usuario que creó la orden
+   * @body {String} client Clienta para quien se creó la orden
    * @body {Array} order.products Productos
    * @body {Object} order.products[] Producto
    * @body {String} order.products[].productId Id de un producto
    * @body {Number} order.products[].qty Cantidad de ese producto en la orden
    * @response {Object} order
    * @response {String} order.userId Id usuario que creó la orden
+   * @response {String} order.client Clienta para quien se creó la orden
    * @response {Array} order.products Productos
    * @response {Object} order.products[] Producto
    * @response {Number} order.products[].qty Cantidad
@@ -111,8 +116,9 @@ module.exports = (app, nextMain) => {
    * @description Elimina una orden
    * @path {DELETE} /orders
    * @params {String} :orderId `id` del producto
-   * @auth Requiere `token` de autenticación y que el usuario sea **admin**
+   * @auth Requiere `token` de autenticación
    * @response {Object} order
+   * @response {String} order.userId Id usuaria que creó la orden
    * @response {String} order.userId Id usuario que creó la orden
    * @response {Array} order.products Productos
    * @response {Object} order.products[] Producto

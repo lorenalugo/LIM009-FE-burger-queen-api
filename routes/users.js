@@ -29,9 +29,9 @@ const initAdminUser = (app, next) => {
 
   // TODO: crear usuarix admin
 
-  db().then((db) => {
-    db.collection('users').save({adminUser})
-    .then(next())
+  return db().then((db) => {
+    db.collection('users').insertOne({adminUser})
+    .then(next(200))
   });
 
 };

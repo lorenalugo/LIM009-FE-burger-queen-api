@@ -7,7 +7,7 @@ module.exports = () => {
   if(!db) {
     return MongoClient.connect(uri, { useNewUrlParser: true })
     .then((client) => {
-      db = client.db('burger-queen-api');
+      db = client.db('burguer-queen-api');
       return db;
     });
   } else {

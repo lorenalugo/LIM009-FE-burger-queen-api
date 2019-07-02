@@ -27,6 +27,7 @@
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@babel/plugin-transform-modules-commonjs": "^7.2.0",
+    "@shelf/jest-mongodb": "^1.0.1",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^24.8.0",
     "docdash": "^1.1.1",
@@ -37,6 +38,7 @@
     "jest": "^24.7.1",
     "jsdoc": "^3.6.2",
     "jsdoc-http-plugin": "^0.3.0",
+    "mongodb-memory-server": "^5.1.5",
     "node-fetch": "^2.3.0",
     "nodemon": "^1.19.1",
     "tree-kill": "^1.2.1"

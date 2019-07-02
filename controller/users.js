@@ -4,8 +4,10 @@ const bcrypt = require('bcrypt');
 
 module.exports = {
   getUsers: (req, resp, next) => {
-    db().then((db) => {
-      db.collection('users').find({} ,{limit:10, sort: [['_id',-1]]})
+    const page = req.query.page;
+    const limit = req.query.limit;
+    return db().then((db) => {
+      db.collection('users').find({}).skip((page*limit)-limit).limit(limit)
         .toArray()
         .then((users) => {
       	resp.send(users);
@@ -16,7 +18,7 @@ module.exports = {
 
   getUserById: (req, resp, next) => {
   	const id = req.params.productId;
-    db().then((db) => {
+    return db().then((db) => {
       db.collection('users').findOne({'_id': new ObjectId(id) })
       .then((user) => {
       	resp.send(user);
@@ -31,7 +33,7 @@ module.exports = {
     if (!email || !password) {
       return next(400);
     } else {
-      db().then((db) => {
+      return db().then((db) => {
         db.collection('users').insert({email, password: bcrypt.hashSync(password, 10), roles: {admin: false}})
         .then((user) => {
       	  resp.send(user);
@@ -47,7 +49,7 @@ module.exports = {
   	if (!email && !password) {
       return next(400);
     } else {
-      db().then((db) => {
+      return db().then((db) => {
         db.collection('users').findOneAndUpdate({'_id': new ObjectId(id) }, {email, password: bcrypt.hashSync(password, 10), roles: {admin: false}})
         .then((user) => {
       	  resp.send(user);
@@ -59,7 +61,7 @@ module.exports = {
 
   deleteUserById: (req, resp, next) => {
   	const id = req.params.userId;
-    db().then((db) => {
+    return db().then((db) => {
       db.collection('users').deleteOne({'_id': new ObjectId(id) })
       .then((result) => {
       	resp.send(result);

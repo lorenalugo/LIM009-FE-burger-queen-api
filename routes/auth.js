@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const db = require('../libs/connection');
 
 const { secret } = config;
 
@@ -19,17 +20,15 @@ module.exports = (app, nextMain) => {
    */
   app.post('/auth', (req, resp, next) => {
     const { email, password } = req.body;
-    const id = req.params.userId;
-
+    let id = db().then((db) => db.collection('users').findOne({email})
+      .then((user) => user._id));
+    
     if (!email || !password) {
       return next(400);
     }
 
     const payload = {
-      email,
-      password: bcrypt.hashSync(password, 10),
-      roles: { admin: false },
-      //sub: id
+      id: user._id
     };
 
     return jwt.sign(payload, secret, (err, token) => {
