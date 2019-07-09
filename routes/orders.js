@@ -3,7 +3,7 @@ const {
   getOrderById,
   createOrder,
   updateOrderById,
-  deleteOrderById
+  deleteOrderById,
 } = require('../controller/orders');
 
 const {

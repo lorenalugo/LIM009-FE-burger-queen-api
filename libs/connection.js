@@ -1,16 +1,16 @@
-const MongoClient = require('mongodb').MongoClient;
-const uri = 'mongodb://localhost:27017/';
+const config = require('../config');
+const { dbUrl } = config;
+const { MongoClient } = require('mongodb');
 
 let db;
 
 module.exports = () => {
-  if(!db) {
-    return MongoClient.connect(uri, { useNewUrlParser: true })
-    .then((client) => {
-      db = client.db('burguer-queen-api');
-      return db;
-    });
-  } else {
-  	return Promise.resolve(db)
+  if (!db) {
+    return MongoClient.connect(dbUrl, { useNewUrlParser: true })
+      .then((client) => {
+        db = client.db('burguer-queen-api');
+        return db;
+      });
   }
-}
+  return Promise.resolve(db);
+};

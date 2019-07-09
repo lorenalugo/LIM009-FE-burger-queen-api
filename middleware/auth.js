@@ -1,51 +1,44 @@
 const jwt = require('jsonwebtoken');
-const secret = require('../config');
-const db = require('../libs/connection');
 const { ObjectId } = require('mongodb').ObjectId;
+const db = require('../libs/connection');
+// const secret = require('../config');
 
-module.exports = secret => (req, resp, next) => {
+module.exports = secret => async (req, resp, next) => {
   const { authorization } = req.headers;
-
   if (!authorization) {
+    req.header.user = undefined;
     return next();
-  }
-
+  } 
   const [type, token] = authorization.split(' ');
 
   if (type.toLowerCase() !== 'bearer') {
     return next();
-  }
-
-  return jwt.verify(token, secret, (err, decodedToken) => {
-    if (err) {
-      return next(403);
+  } 
+  const decodedToken = await (new Promise ((resolve) => {resolve(jwt.verify(token, secret))}));
+  if (decodedToken) {
+    const user = await (await db()).collection('users').findOne({ _id: new ObjectId(decodedToken.id) });
+    if (user) {
+      Object.assign(req, { header: { token, user } });
+      return next();
     }
-    // TODO: Verificar identidad del usuario usando `decodeToken.uid`
-    
-    const id = decodedToken.id
-    const user = db().then((db) => db.collection('users').findOne({ _id: new ObjectId(id)}))
-                      .then(user);
-    req.header.user = user
+    return next(); 
+  } else {
     return next();
-    
-  });
+  }
 };
 
 
 module.exports.isAuthenticated = req => (
-  // TODO: decidir por la informacion del request si la usuaria esta autenticada
-  req.header.user && req.header.user.id
+  req.header.user && req.header.user._id
 );
 
 
-module.exports.isAdmin = req => {
+module.exports.isAdmin = req => (
   // TODO: decidir por la informacion del request si la usuaria es admin
-  const adminId = db().then((db) => {db.collection('users').findOne({roles: { admin: true }})
-  .then((user) => user._id)});
-  return req.header.user.id === adminId;
-};
+  req.header.user.roles.admin
+);
 
-
+//isAdminOrItself
 module.exports.requireAuth = (req, resp, next) => (
   (!module.exports.isAuthenticated(req))
     ? next(401)
@@ -61,3 +54,15 @@ module.exports.requireAdmin = (req, resp, next) => (
       ? next(403)
       : next()
 );
+
+module.exports.isAdminOrItself = (req, resp, next) => {
+  if (!module.exports.isAdmin(req)) {
+    if (req.header.user._id === req.params.uid || req.header.user.email === req.params.uid) {
+      next();
+    } else {
+      next(403)
+    }
+  } else {
+    next()
+  }
+}

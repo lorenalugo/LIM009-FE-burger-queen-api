@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const config = require('../config');
 const db = require('../libs/connection');
 
@@ -20,24 +21,28 @@ module.exports = (app, nextMain) => {
    */
   app.post('/auth', (req, resp, next) => {
     const { email, password } = req.body;
-    let id = db().then((db) => db.collection('users').findOne({email})
-      .then((user) => user._id));
-    
+
     if (!email || !password) {
       return next(400);
-    }
-
-    const payload = {
-      id: user._id
-    };
-
-    return jwt.sign(payload, secret, (err, token) => {
-      if (err) return next(err);
-      resp.send({token});
-      return next(200);
+    } else {
+      db()
+        .then((db) => (
+          db.collection('users').findOne({ email })
+        ))
+        .then((user) => {
+          if (!user) {
+            next(404)
+          } else {
+            if (!bcrypt.compare(password, user.password)) {
+              next(401);
+            } else {
+              resp.send({ token: jwt.sign({ id: user._id }, secret) });
+              next();
+            }
+          }
+        });
+      }
     });
-
-  });
 
   return nextMain();
 };

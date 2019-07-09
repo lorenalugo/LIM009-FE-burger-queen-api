@@ -6,12 +6,13 @@ const {
   getUserById,
   createUser,
   updateUserById,
-  deleteUserById
+  deleteUserById,
 } = require('../controller/users');
 
 const {
   requireAuth,
   requireAdmin,
+  isAdminOrItself
 } = require('../middleware/auth');
 
 
@@ -20,6 +21,8 @@ const initAdminUser = (app, next) => {
   if (!adminEmail || !adminPassword) {
     return next();
   }
+
+  
 
   const adminUser = {
     email: adminEmail,
@@ -30,10 +33,9 @@ const initAdminUser = (app, next) => {
   // TODO: crear usuarix admin
 
   return db().then((db) => {
-    db.collection('users').insertOne({adminUser})
-    .then(next(200))
+    db.collection('users').insertOne(adminUser)
+      .then(user => next());
   });
-
 };
 
 
@@ -99,7 +101,7 @@ module.exports = (app, next) => {
    * @code {403} si no es ni admin o el mismo usuario
    * @code {404} si el usuario solicitado no existe
    */
-  app.get('/users/:uid', requireAuth, getUserById);
+  app.get('/users/:uid', requireAuth, isAdminOrItself, getUserById);
 
   /**
    * @name POST /users
@@ -140,7 +142,7 @@ module.exports = (app, next) => {
    * @code {403} un usuario no admin intenta de modificar sus `roles`
    * @code {404} si el usuario solicitado no existe
    */
-  app.put('/users/:uid', requireAuth, updateUserById);
+  app.put('/users/:uid', requireAuth, isAdminOrItself, updateUserById);
 
   /**
    * @name DELETE /users
@@ -158,7 +160,7 @@ module.exports = (app, next) => {
    * @code {403} si no es ni admin o el mismo usuario
    * @code {404} si el usuario solicitado no existe
    */
-  app.delete('/users/:uid', requireAuth, deleteUserById);
+  app.delete('/users/:uid', requireAuth, isAdminOrItself, deleteUserById);
 
   initAdminUser(app, next);
 };

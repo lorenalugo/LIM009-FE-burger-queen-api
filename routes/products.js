@@ -4,12 +4,12 @@ const {
   getProductById,
   createProduct,
   updateProductById,
-  deleteProductById
+  deleteProductById,
 } = require('../controller/products');
 
 const {
   requireAuth,
-  requireAdmin,
+  requireAdmin, 
 } = require('../middleware/auth');
 
 /** @module products */
