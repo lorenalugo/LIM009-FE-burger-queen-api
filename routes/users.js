@@ -12,7 +12,7 @@ const {
 const {
   requireAuth,
   requireAdmin,
-  isAdminOrItself
+  isAdminOrItself,
 } = require('../middleware/auth');
 
 
@@ -22,7 +22,6 @@ const initAdminUser = (app, next) => {
     return next();
   }
 
-  
 
   const adminUser = {
     email: adminEmail,
@@ -34,7 +33,7 @@ const initAdminUser = (app, next) => {
 
   return db().then((db) => {
     db.collection('users').insertOne(adminUser)
-      .then(user => next());
+      .then(next());
   });
 };
 

@@ -8,23 +8,22 @@ module.exports = secret => async (req, resp, next) => {
   if (!authorization) {
     req.header.user = undefined;
     return next();
-  } 
+  }
   const [type, token] = authorization.split(' ');
 
   if (type.toLowerCase() !== 'bearer') {
     return next();
-  } 
-  const decodedToken = await (new Promise ((resolve) => {resolve(jwt.verify(token, secret))}));
+  }
+  const decodedToken = await (new Promise((resolve) => { resolve(jwt.verify(token, secret)); }));
   if (decodedToken) {
     const user = await (await db()).collection('users').findOne({ _id: new ObjectId(decodedToken.id) });
     if (user) {
       Object.assign(req, { header: { token, user } });
       return next();
     }
-    return next(); 
-  } else {
     return next();
   }
+  return next();
 };
 
 
@@ -38,7 +37,7 @@ module.exports.isAdmin = req => (
   req.header.user.roles.admin
 );
 
-//isAdminOrItself
+// isAdminOrItself
 module.exports.requireAuth = (req, resp, next) => (
   (!module.exports.isAuthenticated(req))
     ? next(401)
@@ -60,9 +59,9 @@ module.exports.isAdminOrItself = (req, resp, next) => {
     if (req.header.user._id === req.params.uid || req.header.user.email === req.params.uid) {
       next();
     } else {
-      next(403)
+      next(403);
     }
   } else {
-    next()
+    next();
   }
-}
+};

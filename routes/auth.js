@@ -24,25 +24,22 @@ module.exports = (app, nextMain) => {
 
     if (!email || !password) {
       return next(400);
-    } else {
-      db()
-        .then((db) => (
-          db.collection('users').findOne({ email })
-        ))
-        .then((user) => {
-          if (!user) {
-            next(404)
-          } else {
-            if (!bcrypt.compare(password, user.password)) {
-              next(401);
-            } else {
-              resp.send({ token: jwt.sign({ id: user._id }, secret) });
-              next();
-            }
-          }
-        });
-      }
-    });
+    }
+    db()
+      .then(db => (
+        db.collection('users').findOne({ email })
+      ))
+      .then((user) => {
+        if (!user) {
+          next(404);
+        } else if (!bcrypt.compare(password, user.password)) {
+          next(401);
+        } else {
+          resp.send({ token: jwt.sign({ id: user._id }, secret) });
+          next();
+        }
+      });
+  });
 
   return nextMain();
 };

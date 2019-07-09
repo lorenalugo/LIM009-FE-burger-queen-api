@@ -1,38 +1,42 @@
 const { ObjectId } = require('mongodb').ObjectId;
 const db = require('../libs/connection');
+const productModel = require('../model/product-model');
 
 module.exports = {
   getProducts: (req, resp, next) => {
-    const {
-      page,
-      limit,
-    } = req.query;
-    const skipValue = parseInt(page) * parseInt(limit) - parseInt(limit);
-    return db().then((db) => {
-      db.collection('products').find({} ,{limit:parseInt(limit), skip: skipValue})
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit);
+    const skipValue = page * limit - limit;
+    db().then((db) => {
+      db.collection('products')
+        .find({}, { limit, skip: skipValue || 0 })
         .toArray()
         .then((products) => {
-        resp.send(products);
-        return next()
-      });
+          db.collection('products').count()
+            .then((count) => {
+              const nextObj = `?limit=${limit || count}&page=${(page)}`;
+              const lastObj = `?limit=${limit || count}&page=${Math.ceil(count / limit)}`;
+              resp.set('link', `<${nextObj}>; rel="next", <${lastObj}>; rel="last"`);
+              resp.json(products);
+              return next();
+            });
+        });
     });
   },
 
   getProductById: async (req, resp, next) => {
     try {
       const id = req.params.productId;
-    //console.error('product id!!!!!!', `------${id}------`, id.length, typeof id)
-    // ESCRIBIR TRY/CATCH DEVOLVIENDO EL ERROR CON 404
-    //(/.*24 hex.*/).match(err.message)
-      const product = await (await db()).collection('products').findOne({'_id': new ObjectId(id) });
-        if (!product) { 
-          return next(404); 
-        } else {
-          resp.send(product);
-          return next();
-        }
-    } catch {
-      return next(404)
+      const idToObjectId = new ObjectId(id);
+      // (/.*24 hex.*/).match(err.message)
+      const product = await (await db()).collection('products').findOne({ _id: new ObjectId(id) });
+      if (!product) {
+        return next(404);
+      }
+      resp.send(product);
+      return next();
+    } catch (e) {
+      return next(404);
     }
   },
 
@@ -40,20 +44,19 @@ module.exports = {
     const {
       name, price, image, type,
     } = req.body;
-   if (!name || !price) {
+    if (!name || !price) {
       return next(400);
-    } else {
-      return db().then((db) => {
-        db.collection('products').insertOne({name, price: parseInt(price), image, type})
-        .then((product) => {
-          resp.send(product);
-          next()
-        });
-      });
     }
+    return db().then((db) => {
+      db.collection('products').insertOne({
+        name, price: parseInt(price), image, type,
+      })
+        .then((product) => {
+          resp.send(product.ops[0]);
+          next();
+        });
+    });
   },
-// mejorar el proceso de actualizacion, colocar condicionales por si no se actualizan todos los campos
-// MongoError: the update operation document must contain atomic operators.
 
   updateProductById: async (req, resp, next) => {
     try {
@@ -61,31 +64,49 @@ module.exports = {
       const {
         name, price, image, type,
       } = req.body;
-      if (!name && !price && !image && !type) {
-        return next(400);
+      const obj = {};
+      if (name && (typeof (name) === 'string')) {
+        obj.name = name;
+      }
+      if (price && (/\d+/.test(price))) {
+        obj.price = price;
+      }
+      if (image && (typeof (image) === 'string')) {
+        obj.image = image;
+      }
+      if (type && (typeof (type) === 'string')) {
+        obj.type = type;
+      }
+      if (Object.keys(obj).length === 0) {
+        next(400);
       } else {
-      const product = await (await db()).collection('products').findOneAndUpdate({'_id': new ObjectId(id) }, {$set: {name, price, image, type}});
+        const product = await (await db()).collection('products').findOneAndUpdate({ _id: new ObjectId(id) }, {
+          $set: obj,
+        }, { returnNewDocument: true });
         if (product) {
-          resp.send(product);
+        // console.error('--------product-------', product)
+          const updatedProduct = await (await db()).collection('products').findOne({ _id: new ObjectId(id) });
+          // console.error('--------product-------', updatedProduct)
+          resp.send(updatedProduct);
           next();
+        } else {
+          next(404);
         }
       }
-    }
-    catch {
-      return next(404);
+    } catch (e) {
+      next(404);
     }
   },
 
   deleteProductById: async (req, resp, next) => {
     const id = req.params.productId;
-    const product = await (await db()).collection('products').findOne({'_id': id })
+    const product = await (await db()).collection('products').findOne({ _id: id });
     if (product) {
-      await (await db).collection('products').deleteOne(result)
+      await (await db).collection('products').deleteOne(product);
       resp.send(product);
       return next();
-    } else {
-      return next(404);
     }
+    return next(404);
   },
 
 };

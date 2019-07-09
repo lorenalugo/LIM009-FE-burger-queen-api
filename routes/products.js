@@ -9,7 +9,7 @@ const {
 
 const {
   requireAuth,
-  requireAdmin, 
+  requireAdmin,
 } = require('../middleware/auth');
 
 /** @module products */
