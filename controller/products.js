@@ -1,6 +1,5 @@
 const { ObjectId } = require('mongodb').ObjectId;
 const db = require('../libs/connection');
-const productModel = require('../model/product-model');
 
 module.exports = {
   getProducts: (req, resp, next) => {
@@ -14,10 +13,13 @@ module.exports = {
         .then((products) => {
           db.collection('products').count()
             .then((count) => {
-              const nextObj = `?limit=${limit || count}&page=${(page)}`;
-              const lastObj = `?limit=${limit || count}&page=${Math.ceil(count / limit)}`;
-              resp.set('link', `<${nextObj}>; rel="next", <${lastObj}>; rel="last"`);
-              resp.json(products);
+              const totalPages = Math.ceil(count / limit) || 1;
+              const nextObj = `/products?limit=${limit || count}&page=${(page + 1) >= totalPages ? totalPages : (page + 1)}`;
+              const lastObj = `/products?limit=${limit || count}&page=${totalPages}`;
+              const firstObj = `/products?limit=${limit || count}&page=${page > 1 ? 1 : page}`;
+              const prevObj = `/products?limit=${limit || count}&page=${(page - 1) !== 0 ? page - 1 : page}`;
+              resp.set('link', `<${firstObj}>; rel="first", <${prevObj}>; rel="prev", <${nextObj}>; rel="next", <${lastObj}>; rel="last"`);
+              resp.send(products);
               return next();
             });
         });
@@ -40,22 +42,26 @@ module.exports = {
     }
   },
 
-  createProduct: (req, resp, next) => {
+  createProduct: async (req, resp, next) => {
+    console.error('create product')
     const {
       name, price, image, type,
     } = req.body;
     if (!name || !price) {
+      console.error('aaaaaaaaaaaa')
       return next(400);
     }
-    return db().then((db) => {
-      db.collection('products').insertOne({
-        name, price: parseInt(price), image, type,
-      })
-        .then((product) => {
-          resp.send(product.ops[0]);
-          next();
-        });
+    console.error('cccccccccccc')
+
+    const product = await (await db()).collection('products').insertOne({
+      name,
+      price,
+      image,
+      type,
     });
+    console.error('ddddddddd', { _id: product.ops[0]._id })
+    resp.send(product.ops[0]);
+    return next();
   },
 
   updateProductById: async (req, resp, next) => {

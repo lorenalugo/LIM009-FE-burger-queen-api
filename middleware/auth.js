@@ -34,25 +34,39 @@ module.exports.isAuthenticated = req => (
 
 module.exports.isAdmin = req => (
   // TODO: decidir por la informacion del request si la usuaria es admin
-  req.header.user.roles.admin
+  req.header.user && req.header.user.roles && req.header.user.roles.admin
 );
 
 // isAdminOrItself
-module.exports.requireAuth = (req, resp, next) => (
-  (!module.exports.isAuthenticated(req))
-    ? next(401)
-    : next()
-);
-
-
-module.exports.requireAdmin = (req, resp, next) => (
-  // eslint-disable-next-line no-nested-ternary
-  (!module.exports.isAuthenticated(req))
-    ? next(401)
-    : (!module.exports.isAdmin(req))
-      ? next(403)
+module.exports.requireAuth = (req, resp, next) => {
+  console.error('requireAuth')
+  return (
+    (!module.exports.isAuthenticated(req))
+      ? next(401)
       : next()
-);
+  );
+}
+
+
+module.exports.requireAdmin = (req, resp, next) => {
+
+  console.error('requireADmin ANTESSSS')
+  const isAuth = module.exports.isAuthenticated(req)
+  console.error('dp isAuth', !isAuth)
+  const isAdmin2 = module.exports.isAdmin(req)
+  console.error('dp isAdmin2', !isAdmin2)
+  try {
+    if (!module.exports.isAuthenticated(req)) {
+      return next(401);
+    } else if (!module.exports.isAdmin(req)) {
+      return next(403);
+    }
+    return next()
+  } catch(e) {
+    console.error(e)
+  }
+  return false
+}
 
 module.exports.isAdminOrItself = (req, resp, next) => {
   if (!module.exports.isAdmin(req)) {

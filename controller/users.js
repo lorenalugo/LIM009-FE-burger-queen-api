@@ -65,7 +65,7 @@ module.exports = {
         resp.send({
           _id: user.ops[0]._id,
           email: user.ops[0].email,
-          roles: user.ops[0].roles
+          roles: user.ops[0].roles,
         });
         next();
       }
@@ -95,8 +95,8 @@ module.exports = {
       return next(400);
     } if (!req.header.user.roles.admin && roles && roles.admin) {
       return next(403);
-    } else {
-    const userToUpdate = await (await db()).collection('users').updateOne({ _id: user._id }, { $set: { email: email || user.email, password: bcrypt.hashSync(password, 10), roles: roles || user.roles } });
+    }
+    await (await db()).collection('users').updateOne({ _id: user._id }, { $set: { email: email || user.email, password: bcrypt.hashSync(password, 10), roles: roles || user.roles } });
     const updatedUser = await (await db()).collection('users').findOne({ _id: user._id });
     resp.send({
       _id: updatedUser._id,
@@ -104,7 +104,6 @@ module.exports = {
       roles: updatedUser.roles,
     });
     return next();
-    }
   },
 
   deleteUserById: async (req, resp, next) => {
@@ -124,10 +123,10 @@ module.exports = {
     if (user) {
       await (await db()).collection('users').deleteOne(user);
       resp.send({
-      _id: user._id,
-      email: user.email,
-      roles: user.roles,
-    })
+        _id: user._id,
+        email: user.email,
+        roles: user.roles,
+      });
       next();
     } else {
       next(404);

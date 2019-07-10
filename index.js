@@ -12,7 +12,7 @@ const db = require('./libs/connection');
 // Conexión a la BD en mongodb
 db()
   .then((db) => {
-    db.collection('users').createIndex( { email: 1 }, { unique: true } );
+    db.collection('users').createIndex({ email: 1 }, { unique: true });
     app.set('config', config);
     app.set('pkg', pkg);
 
@@ -27,7 +27,7 @@ db()
         throw err;
       }
     });
-    app.use(errorHandler);
+    //app.use(errorHandler);
 
     app.listen(port, () => {
       console.info(`App listening on port ${port}`);

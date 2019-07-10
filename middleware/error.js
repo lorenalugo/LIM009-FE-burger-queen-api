@@ -12,6 +12,7 @@ const isKnownHTTPErrorStatus = num => (
 
 // eslint-disable-next-line no-unused-vars
 module.exports = (err, req, resp, next) => {
+  console.error('ggggggggggggggggg')
   const statusCode = (isKnownHTTPErrorStatus(err))
     ? err
     : err.statusCode || 500;
