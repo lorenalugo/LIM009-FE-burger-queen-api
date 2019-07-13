@@ -6,11 +6,10 @@ const { dbUrl } = config;
 let db;
 
 module.exports = () => {
-  console.error('connection original')
   if (!db) {
     return MongoClient.connect(dbUrl, { useNewUrlParser: true })
       .then((client) => {
-        db = client;
+        db = client.db('burger-queen-api');
         return db;
       });
   }

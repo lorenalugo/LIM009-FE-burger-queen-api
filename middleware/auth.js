@@ -38,41 +38,26 @@ module.exports.isAdmin = req => (
 );
 
 // isAdminOrItself
-module.exports.requireAuth = (req, resp, next) => {
-  console.error('requireAuth')
-  return (
-    (!module.exports.isAuthenticated(req))
-      ? next(401)
+module.exports.requireAuth = (req, resp, next) => (
+  (!module.exports.isAuthenticated(req))
+    ? resp.sendStatus(401)
+    : next()
+);
+
+module.exports.requireAdmin = (req, resp, next) => (
+  (!module.exports.isAuthenticated(req))
+    ? resp.sendStatus(401)
+    : (!module.exports.isAdmin(req))
+      ? resp.sendStatus(403)
       : next()
-  );
-}
-
-
-module.exports.requireAdmin = (req, resp, next) => {
-
-  console.error('requireADmin ANTESSSS')
-  const isAuth = module.exports.isAuthenticated(req)
-  console.error('dp isAuth', !isAuth)
-  const isAdmin2 = module.exports.isAdmin(req)
-  console.error('dp isAdmin2', !isAdmin2)
-  try {
-    if (!module.exports.isAuthenticated(req)) {
-      return next(401);
-    } else if (!module.exports.isAdmin(req)) {
-      return next(403);
-    }
-    return next()
-  } catch(e) {
-    console.error(e)
-  }
-}
+);
 
 module.exports.isAdminOrItself = (req, resp, next) => {
   if (!module.exports.isAdmin(req)) {
     if (req.header.user._id === req.params.uid || req.header.user.email === req.params.uid) {
       next();
     } else {
-      next(403);
+      resp.sendStatus(403);
     }
   } else {
     next();

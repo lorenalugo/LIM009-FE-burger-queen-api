@@ -33,25 +33,23 @@ module.exports = {
       // (/.*24 hex.*/).match(err.message)
       const product = await (await db()).collection('products').findOne({ _id: new ObjectId(id) });
       if (!product) {
-        return next(404);
+        return resp.sendStatus(404);
       }
       resp.send(product);
       return next();
     } catch (e) {
-      return next(404);
+      return resp.sendStatus(404);
     }
   },
 
   createProduct: async (req, resp, next) => {
-    console.error('create product')
     const {
       name, price, image, type,
     } = req.body;
+    console.error('+++++PRODUCT name y price++++', name, price)
     if (!name || !price) {
-      console.error('aaaaaaaaaaaa')
-      return next(400);
+      return resp.sendStatus(400);
     }
-    console.error('cccccccccccc')
 
     const product = await (await db()).collection('products').insertOne({
       name,
@@ -59,7 +57,7 @@ module.exports = {
       image,
       type,
     });
-    console.error('ddddddddd', { _id: product.ops[0]._id })
+    console.error('+++++PRODUCT CREATED++++', product.ops[0])
     resp.send(product.ops[0]);
     return next();
   },
@@ -84,7 +82,7 @@ module.exports = {
         obj.type = type;
       }
       if (Object.keys(obj).length === 0) {
-        next(400);
+        resp.sendStatus(400);
       } else {
         const product = await (await db()).collection('products').findOneAndUpdate({ _id: new ObjectId(id) }, {
           $set: obj,
@@ -96,11 +94,11 @@ module.exports = {
           resp.send(updatedProduct);
           next();
         } else {
-          next(404);
+          resp.sendStatus(404);
         }
       }
     } catch (e) {
-      next(404);
+      resp.sendStatus(404);
     }
   },
 
@@ -112,7 +110,7 @@ module.exports = {
       resp.send(product);
       return next();
     }
-    return next(404);
+    return resp.sendStatus(404);
   },
 
 };
