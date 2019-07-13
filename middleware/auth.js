@@ -65,7 +65,6 @@ module.exports.requireAdmin = (req, resp, next) => {
   } catch(e) {
     console.error(e)
   }
-  return false
 }
 
 module.exports.isAdminOrItself = (req, resp, next) => {

@@ -67,10 +67,11 @@ module.exports = {
           email: user.ops[0].email,
           roles: user.ops[0].roles,
         });
-        next();
+        return next();
       }
     } catch (err) {
-      next(403);
+      console.error(err)
+      return next(403);
     }
   },
 

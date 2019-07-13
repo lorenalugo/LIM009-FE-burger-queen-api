@@ -88,7 +88,7 @@ module.exports = {
       } else {
         const product = await (await db()).collection('products').findOneAndUpdate({ _id: new ObjectId(id) }, {
           $set: obj,
-        }, { returnNewDocument: true });
+        });
         if (product) {
         // console.error('--------product-------', product)
           const updatedProduct = await (await db()).collection('products').findOne({ _id: new ObjectId(id) });

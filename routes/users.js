@@ -16,7 +16,7 @@ const {
 } = require('../middleware/auth');
 
 
-const initAdminUser = (app, next) => {
+const initAdminUser = async (app, next) => {
   const { adminEmail, adminPassword } = app.get('config');
   if (!adminEmail || !adminPassword) {
     return next();
@@ -31,10 +31,12 @@ const initAdminUser = (app, next) => {
 
   // TODO: crear usuarix admin
 
-  return db().then((db) => {
-    db.collection('users').insertOne(adminUser)
-      .then(next());
-  });
+  const admin = await (await db()).collection('users').findOne({ email: adminUser.email });
+  if (!admin) {
+    await (await db()).collection('users').insertOne(adminUser);
+    return next();
+  }
+  return next();
 };
 
 
