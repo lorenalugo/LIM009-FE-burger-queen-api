@@ -46,7 +46,6 @@ module.exports = {
     const {
       name, price, image, type,
     } = req.body;
-    console.error('+++++PRODUCT name y price++++', name, price)
     if (!name || !price) {
       return resp.sendStatus(400);
     }
@@ -57,7 +56,6 @@ module.exports = {
       image,
       type,
     });
-    console.error('+++++PRODUCT CREATED++++', product.ops[0])
     resp.send(product.ops[0]);
     return next();
   },
@@ -88,9 +86,7 @@ module.exports = {
           $set: obj,
         });
         if (product) {
-        // console.error('--------product-------', product)
           const updatedProduct = await (await db()).collection('products').findOne({ _id: new ObjectId(id) });
-          // console.error('--------product-------', updatedProduct)
           resp.send(updatedProduct);
           next();
         } else {
@@ -103,14 +99,18 @@ module.exports = {
   },
 
   deleteProductById: async (req, resp, next) => {
-    const id = req.params.productId;
-    const product = await (await db()).collection('products').findOne({ _id: id });
-    if (product) {
-      await (await db).collection('products').deleteOne(product);
-      resp.send(product);
-      return next();
+    try {
+      const id = req.params.productId;
+      const oid = new ObjectId(id);
+      const product = await (await db()).collection('products').findOne({ _id: oid });
+      if (product) {
+        await (await db()).collection('products').deleteOne({ _id: product._id});
+        resp.send(product);
+        next();
+      } 
+    } catch(err) {
+        resp.sendStatus(404);
     }
-    return resp.sendStatus(404);
   },
 
 };
