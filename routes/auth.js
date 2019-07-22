@@ -19,11 +19,30 @@ module.exports = (app, nextMain) => {
    * @code {400} si no se proveen `email` o `password` o ninguno de los dos
    * @auth No requiere autenticación
    */
-  app.post('/auth', (req, resp, next) => {
-    const { email, password } = req.body;
+  app.post('/auth', async (req, resp, next) => {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return next(400);
+      }
+      const user = await (await db()).collection('users').findOne({ email });
+      if (await bcrypt.compare(password, user.password)) {
+        resp.send({ token: jwt.sign({ id: user._id }, secret) });
+        next();
+      } else {
+        next(401);
+      }
+    } catch (err) {
+      next(404);
+    }
+  });
+  return nextMain();
+};
+
+/* const { email, password } = req.body;
 
     if (!email || !password) {
-      return next(400);
+      return resp.sendStatus(400);
     }
     db()
       .then(db => (
@@ -31,15 +50,12 @@ module.exports = (app, nextMain) => {
       ))
       .then((user) => {
         if (!user) {
-          next(404);
-        } else if (!bcrypt.compare(password, user.password)) {
-          next(401);
+          resp.sendStatus(404);
+        } else if (bcrypt.compare(password, user.password)) {
+          resp.sendStatus(401);
         } else {
           resp.send({ token: jwt.sign({ id: user._id }, secret) });
-          next();
+          resp.sendStatus();
         }
       });
-  });
-
-  return nextMain();
-};
+*/

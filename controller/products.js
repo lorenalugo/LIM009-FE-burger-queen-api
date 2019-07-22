@@ -1,5 +1,6 @@
 const { ObjectId } = require('mongodb').ObjectId;
 const db = require('../libs/connection');
+const pagination = require('./pagination');
 
 module.exports = {
   getProducts: (req, resp, next) => {
@@ -13,12 +14,8 @@ module.exports = {
         .then((products) => {
           db.collection('products').count()
             .then((count) => {
-              const totalPages = Math.ceil(count / limit) || 1;
-              const nextObj = `/products?limit=${limit || count}&page=${(page + 1) >= totalPages ? totalPages : (page + 1)}`;
-              const lastObj = `/products?limit=${limit || count}&page=${totalPages}`;
-              const firstObj = `/products?limit=${limit || count}&page=${page > 1 ? 1 : page}`;
-              const prevObj = `/products?limit=${limit || count}&page=${(page - 1) !== 0 ? page - 1 : page}`;
-              resp.set('link', `<${firstObj}>; rel="first", <${prevObj}>; rel="prev", <${nextObj}>; rel="next", <${lastObj}>; rel="last"`);
+              const link = pagination('products', count, page, limit);
+              resp.set('link', link.link);
               resp.send(products);
               return next();
             });
@@ -31,7 +28,7 @@ module.exports = {
       const id = req.params.productId;
       const idToObjectId = new ObjectId(id);
       // (/.*24 hex.*/).match(err.message)
-      const product = await (await db()).collection('products').findOne({ _id: new ObjectId(id) });
+      const product = await (await db()).collection('products').findOne({ _id: idToObjectId });
       if (!product) {
         return resp.sendStatus(404);
       }
@@ -89,8 +86,6 @@ module.exports = {
           const updatedProduct = await (await db()).collection('products').findOne({ _id: new ObjectId(id) });
           resp.send(updatedProduct);
           next();
-        } else {
-          resp.sendStatus(404);
         }
       }
     } catch (e) {
@@ -104,12 +99,12 @@ module.exports = {
       const oid = new ObjectId(id);
       const product = await (await db()).collection('products').findOne({ _id: oid });
       if (product) {
-        await (await db()).collection('products').deleteOne({ _id: product._id});
+        await (await db()).collection('products').deleteOne({ _id: product._id });
         resp.send(product);
         next();
-      } 
-    } catch(err) {
-        resp.sendStatus(404);
+      }
+    } catch (err) {
+      resp.sendStatus(404);
     }
   },
 

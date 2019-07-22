@@ -1,6 +1,7 @@
 const { ObjectId } = require('mongodb').ObjectId;
 const bcrypt = require('bcrypt');
 const db = require('../libs/connection');
+const pagination = require('./pagination');
 
 module.exports = {
   getUsers: (req, resp, next) => {
@@ -8,19 +9,15 @@ module.exports = {
     const limit = parseInt(req.query.limit);
     const skipValue = page * limit - limit;
 
-    db().then((db) => {
+    return db().then((db) => {
       db.collection('users')
         .find({}, { limit, skip: skipValue || 0 })
         .toArray()
         .then((users) => {
           db.collection('users').count()
             .then((count) => {
-              const totalPages = Math.ceil(count / limit) || 1;
-              const nextObj = `/users?limit=${limit || count}&page=${(page + 1) >= totalPages ? totalPages : (page + 1)}`;
-              const lastObj = `/users?limit=${limit || count}&page=${totalPages}`;
-              const firstObj = `/users?limit=${limit || count}&page=${page > 1 ? 1 : page}`;
-              const prevObj = `/users?limit=${limit || count}&page=${(page - 1) !== 0 ? page - 1 : page}`;
-              resp.set('link', `<${firstObj}>; rel="first", <${prevObj}>; rel="prev", <${nextObj}>; rel="next", <${lastObj}>; rel="last"`);
+              const link = pagination('users', count, page, limit);
+              resp.set('link', link.link);
               resp.send(users);
               return next();
             });
@@ -59,20 +56,13 @@ module.exports = {
     if (!email || !password) {
       return next(400);
     }
-    try {
-      const user = await (await db()).collection('users').insertOne({ email, password: bcrypt.hashSync(password, 10), roles: roles || { admin: false } });
-      if (user) {
-        resp.send({
-          _id: user.ops[0]._id,
-          email: user.ops[0].email,
-          roles: user.ops[0].roles,
-        });
-        return next();
-      }
-    } catch (err) {
-      console.error(err)
-      return next(403);
-    }
+    const user = await (await db()).collection('users').insertOne({ email, password: bcrypt.hashSync(password, 10), roles: roles || { admin: false } });
+    resp.send({
+      _id: user.ops[0]._id,
+      email: user.ops[0].email,
+      roles: user.ops[0].roles,
+    });
+    return next();
   },
 
   updateUserById: async (req, resp, next) => {
@@ -97,7 +87,7 @@ module.exports = {
     } if (!req.header.user.roles.admin && roles && roles.admin) {
       return next(403);
     }
-    await (await db()).collection('users').updateOne({ _id: user._id }, { $set: { email: email || user.email, password: bcrypt.hashSync(password, 10), roles: roles || user.roles } });
+    await (await db()).collection('users').updateOne({ _id: user._id }, { $set: { email: email || user.email, password: ((password) ? bcrypt.hashSync(password, 10) : user.password), roles: roles || user.roles } });
     const updatedUser = await (await db()).collection('users').findOne({ _id: user._id });
     resp.send({
       _id: updatedUser._id,

@@ -7,11 +7,10 @@
     "node": ">=10"
   },
   "scripts": {
-    
     "dev": "nodemon index.js",
     "start": "node index.js",
     "test:e2e": "jest --verbose --testPathPattern e2e --globalSetup ./e2e/globalSetup --globalTeardown ./e2e/globalTeardown --runInBand",
-    "test:unit": "jest --verbose --testPathIgnorePatterns e2e",
+    "test:unit": "jest --verbose --testPathIgnorePatterns e2e --coverage",
     "test": "npm run test:e2e && npm run test:unit",
     "lint": "eslint .",
     "docs:generate": "jsdoc -c jsdoc.conf --readme README-docs.md",
@@ -20,8 +19,10 @@
   "dependencies": {
     "bcrypt": "^3.0.6",
     "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "express": "^4.16.4",
     "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.14",
     "mongodb": "^3.2.7"
   },
   "devDependencies": {

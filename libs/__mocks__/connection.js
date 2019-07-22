@@ -5,15 +5,15 @@ let db;
 
 module.exports = () => {
   if (!db) {
-  	const mongoServer = new MongoMemoryServer();
-  	return mongoServer.getConnectionString()
-  	  .then((mongoUrl) => MongoClient.connect(mongoUrl, { useNewUrlParser: true }))
+    const mongoServer = new MongoMemoryServer();
+    return mongoServer.getConnectionString()
+      .then(mongoUrl => MongoClient.connect(mongoUrl, { useNewUrlParser: true }))
       .then((client) => {
         mongoServer.getDbName()
           .then((dbName) => {
             db = client.db(dbName);
             return db;
-          })
+          });
       });
   }
   return Promise.resolve(db);

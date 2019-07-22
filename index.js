@@ -1,11 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const config = require('./config');
 const authMiddleware = require('./middleware/auth');
 const errorHandler = require('./middleware/error');
 const routes = require('./routes');
 const pkg = require('./package.json');
 
-const { port, secret } = config;
+const { port, secret, permision } = config;
 const app = express();
 const db = require('./libs/connection');
 
@@ -17,6 +18,9 @@ db()
     app.set('pkg', pkg);
 
     // parse application/x-www-form-urlencoded
+    app.use(cors(
+      permision.application.cors.server,
+    ));
     app.use(express.urlencoded({ extended: false }));
     app.use(express.json());
     app.use(authMiddleware(secret));
