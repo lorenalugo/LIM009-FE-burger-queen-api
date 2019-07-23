@@ -305,9 +305,12 @@ describe('PUT /orders/:orderid', () => {
         return resp.json();
       })
       .then(json => fetchAsTestUser(`/orders/${json._id}`))
-      .then(json => fetchAsAdmin(`/orders/${json._id}`, { method: 'PUT' }))
+      .then((response) => {
+        return response.json();
+      })
+      .then(json => fetchAsAdmin(`/orders/${json._id}`, { method: 'PUT' })))
       .then(resp => expect(resp.status).toBe(400))
-  ));
+  );
 
   it('should fail with 400 when bad status', () => (
     Promise.all([
