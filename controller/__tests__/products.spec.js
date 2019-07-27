@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 const _ = require('lodash');
 
 const {

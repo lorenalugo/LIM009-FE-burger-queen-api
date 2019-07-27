@@ -289,7 +289,7 @@ describe('updateUserById', () => {
     await db().close();
   });
 
-  it('should update user by email', (done) => {
+  it('should update email user by email', (done) => {
     const mockReq = {
       header: {
         user: {
@@ -303,6 +303,39 @@ describe('updateUserById', () => {
       },
       body: {
         email: 'newthirdtest@mail.com',
+      },
+    };
+
+    const mockResp = {
+      send: jest.fn(json => json),
+    };
+
+    const mockNext = (code) => {
+      expect(mockResp.send.mock.calls).toHaveLength(1);
+      expect(code).toEqual(undefined);
+      done();
+    };
+
+    updateUserById(mockReq, mockResp, mockNext);
+  });
+
+  it('should update password and roles user by email', (done) => {
+    const mockReq = {
+      header: {
+        user: {
+          roles: {
+            admin: true,
+          },
+        },
+      },
+      params: {
+        uid: 'secondtest@mail.com',
+      },
+      body: {
+        password: 'xxxxx',
+        roles: {
+          admin: false,
+        },
       },
     };
 

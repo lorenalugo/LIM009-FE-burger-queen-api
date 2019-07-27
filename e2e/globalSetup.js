@@ -117,6 +117,7 @@ module.exports = () => new Promise((resolve, reject) => {
     console.info('\nIn-memory mongo server ', mongoUrl);
 
     console.info('Staring local server...');
+    // eslint-disable-next-line max-len
     // const child = spawn('node', ['--debug-brk', '--inspect', 'index.js', process.env.PORT || 8888], {
     const child = spawn('npm', ['start', process.env.PORT || 8888], {
       cwd: path.resolve(__dirname, '../'),

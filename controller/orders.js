@@ -4,8 +4,8 @@ const pagination = require('./pagination');
 
 module.exports = {
   getOrders: (req, resp, next) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10);
     const skipValue = page * limit - limit;
     db().then((db) => {
       db.collection('orders')
@@ -16,7 +16,7 @@ module.exports = {
             .then((count) => {
               const link = pagination('orders', count, page, limit);
               resp.set('link', link.link);
-              resp.json(orders);
+              resp.send(orders);
               return next();
             });
         });
@@ -70,17 +70,12 @@ module.exports = {
       return resp.sendStatus(400);
     }
 
-    const productsOrdered = products.map(async (product) => {
-      // ids converted into objectId
-      const id = new ObjectId(product.product);
-      const productFound = await (await db()).collection('products').findOne({ _id: id });
-      return productFound;
-    });
     const productsObj = products.map(obj => ({
       product: new ObjectId(obj.product),
       qty: obj.qty,
     }));
-    if (productsOrdered.length === products.length) {
+
+    if (products.length) {
       const orderCreated = await (await db()).collection('orders').insertOne({
         userId, client, products: productsObj, status: 'pending', dateEntry: new Date(),
       });
@@ -106,7 +101,6 @@ module.exports = {
           },
         },
       ]).toArray();
-      // console.error('-----orderCReated------', orderRead[0]);
       resp.send(orderRead[0]);
       return next();
     }
@@ -127,7 +121,7 @@ module.exports = {
       } = req.body;
       const obj = {};
 
-      if (userId && (typeof (userId) === 'string') && userId.length === 24) {
+      if (userId && (typeof (userId) === 'string')) {
         obj.userId = userId;
       }
       if (client && (typeof (client) === 'string')) {
@@ -141,17 +135,7 @@ module.exports = {
         }
       }
       if (products && (Array.isArray(products) === true)) {
-        let totalProducts;
-        products.forEach(async (item) => {
-          // ids converted into objectId
-          const productId = new ObjectId(item.product._id);
-          const productFound = await (await db()).collection('products').findOne({ _id: productId });
-          if (productFound) {
-            productFound.qty = item.qty;
-            totalProducts.push(productFound);
-          }
-        });
-        obj.product = totalProducts;
+        obj.product = products;
       } else if (products && !Array.isArray(products)) {
         return resp.sendStatus(400);
       }

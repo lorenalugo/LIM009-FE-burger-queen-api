@@ -4,8 +4,8 @@ const pagination = require('./pagination');
 
 module.exports = {
   getProducts: (req, resp, next) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10);
     const skipValue = page * limit - limit;
     db().then((db) => {
       db.collection('products')
@@ -30,7 +30,7 @@ module.exports = {
       // (/.*24 hex.*/).match(err.message)
       const product = await (await db()).collection('products').findOne({ _id: idToObjectId });
       if (!product) {
-        return resp.sendStatus(404);
+        throw Error;
       }
       resp.send(product);
       return next();

@@ -1,5 +1,5 @@
 const {
-  // getOrders,
+  getOrders,
   getOrderById,
   createOrder,
   updateOrderById,
@@ -574,6 +574,52 @@ describe('updateOrderById', () => {
     createOrder(mockReq2, mockResp2, mockNext2);
   });
 
+  it('should get 400 when missing props', (done) => {
+    let mockOrderId = '';
+    const mockReq2 = {
+      body: {
+        userId: '1c2f34cdf3',
+        client: 'Another User Test',
+        products: [
+          {
+            product: mockProductId,
+            qty: 2,
+          },
+        ],
+      },
+    };
+
+    const mockResp2 = {
+      send: jest.fn(json => json),
+      sendStatus: jest.fn(code => code),
+    };
+
+    const mockResp = {
+      send: jest.fn(json => json),
+      sendStatus: (code) => {
+        expect(mockResp.send.mock.calls).toHaveLength(0);
+        expect(code).toEqual(404);
+        done();
+      },
+    };
+    const mockNext = jest.fn(json => json);
+
+    const mockNext2 = () => {
+      mockOrderId = mockResp2.send.mock.calls[0][0]._id;
+      const mockReq = {
+        headers: '',
+        params: {
+          orderid: mockOrderId,
+        },
+        body: {},
+      };
+
+      updateOrderById(mockReq, mockResp, mockNext);
+    };
+
+    createOrder(mockReq2, mockResp2, mockNext2);
+  });
+
   it('should get 400 when invalid status', (done) => {
     let mockOrderId = '';
     const mockReq2 = {
@@ -620,5 +666,96 @@ describe('updateOrderById', () => {
     };
 
     createOrder(mockReq2, mockResp2, mockNext2);
+  });
+});
+
+describe('getOrders', () => {
+  let mockProductId = '';
+
+  beforeAll(async () => {
+    await db();
+    const mockReq1 = {
+      headers: '',
+      body: {
+        name: 'test',
+        price: '2',
+        image: 'image.jpg',
+        type: 'dinner',
+      },
+    };
+
+    const mockResp1 = {
+      send: jest.fn(json => json),
+      sendStatus: jest.fn(code => code),
+    };
+
+    const mockNext1 = jest.fn(code => code);
+
+    await createProduct(mockReq1, mockResp1, mockNext1);
+
+    mockProductId = mockResp1.send.mock.calls[0][0]._id;
+  });
+
+  afterAll(async () => {
+    await db().close();
+  });
+
+  it('should get all orders', (done) => {
+    const mockReq2 = {
+      body: {
+        userId: 'userTest',
+        client: 'client1',
+        products: [
+          {
+            product: mockProductId,
+            qty: 1,
+          },
+        ],
+      },
+    };
+    const mockReq3 = {
+      body: {
+        userId: 'userTest',
+        client: 'client2',
+        products: [
+          {
+            product: mockProductId,
+            qty: 4,
+          },
+        ],
+      },
+    };
+    const mockResp2 = {
+      send: jest.fn(json => json),
+      sendStatus: jest.fn(code => code),
+    };
+
+    const mockNext2 = () => {
+      done();
+    };
+
+    createOrder(mockReq2, mockResp2, mockNext2);
+    createOrder(mockReq3, mockResp2, mockNext2);
+    const mockReq = {
+      headers: '',
+      query: {
+        limit: 1,
+        page: 1,
+      },
+    };
+
+    const mockResp = {
+      send: jest.fn(json => json),
+      set: jest.fn((prop, value) => value),
+    };
+
+    const mockNext = (code) => {
+      expect(mockResp.send.mock.calls).toHaveLength(1);
+      expect(mockResp.set.mock.calls[0][0]).toBe('link');
+      expect(code).toEqual(undefined);
+      done();
+    };
+
+    getOrders(mockReq, mockResp, mockNext);
   });
 });

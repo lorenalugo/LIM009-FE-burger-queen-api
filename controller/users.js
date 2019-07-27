@@ -5,8 +5,8 @@ const pagination = require('./pagination');
 
 module.exports = {
   getUsers: (req, resp, next) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10);
     const skipValue = page * limit - limit;
 
     return db().then((db) => {
@@ -53,16 +53,24 @@ module.exports = {
 
   createUser: async (req, resp, next) => {
     const { email, password, roles } = req.body;
-    if (!email || !password) {
+    if (!email || !password || !email.match(/[\d\w]+@[\d\w]+/i) || password.length < 3) {
       return next(400);
     }
-    const user = await (await db()).collection('users').insertOne({ email, password: bcrypt.hashSync(password, 10), roles: roles || { admin: false } });
-    resp.send({
-      _id: user.ops[0]._id,
-      email: user.ops[0].email,
-      roles: user.ops[0].roles,
-    });
-    return next();
+    try {
+      const findUser = await (await db()).collection('users').findOne({ email });
+      if (findUser) {
+        throw Error;
+      }
+      const user = await (await db()).collection('users').insertOne({ email, password: bcrypt.hashSync(password, 10), roles: roles || { admin: false } });
+      resp.send({
+        _id: user.ops[0]._id,
+        email: user.ops[0].email,
+        roles: user.ops[0].roles,
+      });
+      return next();
+    } catch (err) {
+      return next(403);
+    }
   },
 
   updateUserById: async (req, resp, next) => {
