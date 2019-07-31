@@ -8,7 +8,7 @@ exports.permision = {
     cors: {
       server: [
         {
-          origin: 'localhost:8080',
+          origin: '*',
           credentials: true,
         },
       ],
