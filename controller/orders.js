@@ -3,24 +3,38 @@ const db = require('../libs/connection');
 const pagination = require('./pagination');
 
 module.exports = {
-  getOrders: (req, resp, next) => {
+  getOrders: async (req, resp, next) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10);
     const skipValue = page * limit - limit;
-    db().then((db) => {
-      db.collection('orders')
-        .find({}, { limit, skip: skipValue || 0 })
-        .toArray()
-        .then((orders) => {
-          db.collection('orders').count()
-            .then((count) => {
-              const link = pagination('orders', count, page, limit);
-              resp.set('link', link.link);
-              resp.send(orders);
-              return next();
-            });
-        });
-    });
+    const result = await (await db()).collection('orders').aggregate([
+      { $limit: limit || 10 },
+      { $skip: skipValue || 0 },
+      { $unwind: '$products' },
+      {
+        $lookup: {
+          from: 'products', localField: 'products.product', foreignField: '_id', as: 'products-aggregate',
+        },
+      },
+      { $unwind: '$products-aggregate' },
+      { $addFields: { 'products.product': '$products-aggregate' } },
+      { $addFields: { 'products.qty': '$products.qty' } },
+      {
+        $group: {
+          _id: '$_id',
+          userId: { $first: '$userId' },
+          client: { $first: '$client' },
+          products: { $push: '$products' },
+          status: { $first: '$status' },
+          dateEntry: { $first: '$dateEntry' },
+        },
+      },
+    ]).toArray();
+    const count = await (await db()).collection('products').countDocuments();
+    const link = pagination('products', count, page, limit || 10);
+    resp.set('link', link.link);
+    resp.send(result);
+    return next();
   },
 
   getOrderById: async (req, resp, next) => {

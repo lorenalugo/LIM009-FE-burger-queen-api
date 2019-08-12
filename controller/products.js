@@ -49,7 +49,7 @@ module.exports = {
 
     const product = await (await db()).collection('products').insertOne({
       name,
-      price,
+      price: parseInt(price, 10),
       image,
       type,
     });

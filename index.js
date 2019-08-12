@@ -13,8 +13,8 @@ const db = require('./libs/connection');
 // Conexión a la BD en mongodb
 
 db()
-  .then(() => {
-    // db.collection('users').createIndex({ email: 1 }, { unique: true });
+  .then(async () => {
+    (await db()).collection('users').createIndex({ email: 1 }, { unique: true });
     app.set('config', config);
     app.set('pkg', pkg);
 

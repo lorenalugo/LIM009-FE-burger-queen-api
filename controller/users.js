@@ -57,10 +57,10 @@ module.exports = {
       return next(400);
     }
     try {
-      const findUser = await (await db()).collection('users').findOne({ email });
+      /* const findUser = await (await db()).collection('users').findOne({ email });
       if (findUser) {
         throw Error;
-      }
+      } */
       const user = await (await db()).collection('users').insertOne({ email, password: bcrypt.hashSync(password, 10), roles: roles || { admin: false } });
       resp.send({
         _id: user.ops[0]._id,
